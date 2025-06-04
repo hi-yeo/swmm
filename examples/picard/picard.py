@@ -35,6 +35,34 @@ def compute_step(q_last, y1, y2, h1, h2, q_old, a_old, dt, length, width, n, ome
     q = (1.0 - omega) * q_last + omega * q
     return q
 
+
+def compute_step_details(q_last, y1, y2, h1, h2, q_old, a_old,
+                         dt, length, width, n, omega):
+    """Return step results along with momentum terms for testing."""
+    a1 = area(width, y1)
+    a2 = area(width, y2)
+    a_mid = 0.5 * (a1 + a2)
+    r1 = hyd_radius(width, y1)
+    r_mid = hyd_radius(width, 0.5 * (y1 + y2))
+
+    rho = 1.0
+    a_wtd = a1 + (a_mid - a1) * rho
+    r_wtd = r1 + (r_mid - r1) * rho
+
+    v = q_last / a_mid
+    rough_factor = GRAVITY * (n / PHI) ** 2
+
+    dq1 = dt * rough_factor / (r_wtd ** 1.33333) * abs(v)
+    dq2 = dt * GRAVITY * a_wtd * (h2 - h1) / length
+    dq3 = 0.0
+    dq4 = 0.0
+    dq5 = 0.0
+    dq6 = 0.0
+    denom = 1.0 + dq1 + dq5
+    q = (q_old - dq2 + dq3 + dq4 + dq6) / denom
+    q = (1.0 - omega) * q_last + omega * q
+    return dq1, dq2, dq3, dq4, dq5, dq6, denom, q
+
 def picard_flow():
     width = 3.0
     length = 200.0
